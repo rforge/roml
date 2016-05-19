@@ -54,6 +54,8 @@ Promise.Variable <- function(name, container, type) {
     v
 }
 
+##' @noRd
+##' @export
 Vector.Variable <- function(name, type="double", length, data=NULL) {
     v <- ROML_Variable$new(name=name, container="Vector", type=type, length=length, 
                            data=data)
