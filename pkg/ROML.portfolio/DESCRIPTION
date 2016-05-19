@@ -1,0 +1,19 @@
+Package: ROML.portfolio
+Type: Package
+Title: ROML-Portfolio-Optimization
+Version: 0.0-0
+Authors@R: c(person("Laura", "Vana", 
+                    role = c("aut", "cre"),
+                    email = "laura.vana@wu.ac.at"),
+             person("Florian", "Schwendinger", role = "aut"),
+             person("Ronald", "Hochreiter", role = "aut"))
+Description: A simple and contemporary way to model complex portfolio optimization 
+        problems with R.
+Depends:
+    R (>= 2.15)
+Imports:
+	stats,
+	slam,
+	ROI,
+    ROML
+License: GPL-3

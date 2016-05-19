@@ -1,0 +1,50 @@
+.onLoad <- function( libname, pkgname ) {
+    ## Data update
+	ROML_register_objective_data_update_function("markowitz", markowitz_update_data)
+	ROML_register_objective_data_update_function("reward", reward_update_data)
+	ROML_register_objective_data_update_function("cvar", cvar_update_data)
+	ROML_register_objective_data_update_function("mad", mad_update_data)
+	ROML_register_objective_data_update_function("downside_mad", downside_mad_update_data)
+	ROML_register_objective_data_update_function("downside_var", downside_var_update_data)
+	ROML_register_objective_data_update_function("minimax_young", minimax_young_update_data)
+	ROML_register_objective_data_update_function("quadratic_utility", quadratic_utility_update_data)
+	ROML_register_objective_data_update_function("sharpe", sharpe_update_data)
+	ROML_register_objective_data_update_function("omega", omega_update_data)
+	## ROML_register_objective_data_update_function("VaR", value_at_risk_update_data)
+    
+    ## Objectives
+	ROML_register_objective_function("markowitz", markowitz_objective)
+	ROML_register_objective_function("reward", reward_objective)
+	ROML_register_objective_function("cvar", cvar_objective)
+	ROML_register_objective_function("mad", mad_objective)
+	ROML_register_objective_function("downside_mad", downside_mad_objective)
+	ROML_register_objective_function("downside_var", downside_var_objective)
+    ROML_register_objective_function("minimax_young", minimax_young_objective)
+    ROML_register_objective_function("quadratic_utility", quadratic_utility_objective)
+    ROML_register_objective_function("sharpe", sharpe_objective)
+    ROML_register_objective_function("omega", omega_objective)
+    # ROML_register_objective_function("loss", loss)
+    # ROML_register_objective_function("VaR", value_at_risk_objective)
+    
+    ## Constraints
+	ROML_register_constraint_function("reward", reward_constraint)
+	ROML_register_constraint_function("budget", sum_constraint)
+	ROML_register_constraint_function("budget_norm", sum_1_constraint_fixed)
+    ROML_register_constraint_function("markowitz", markowitz_constraint)
+	ROML_register_constraint_function("cardinality", cardinality_constraint)
+	ROML_register_constraint_function("cvar", cvar_constraint)
+	# ROML_register_constraint_function("VaR", value_at_risk_constraint )
+	ROML_register_constraint_function("turnover", turnover_constraint )
+
+    ## Objective value transformation
+	## ROML_register_objective_obj_val_transf("markowitz", markowitz_obj_val_transf)
+	## ROML_register_objective_obj_val_transf("reward", reward_update_data)
+	## ROML_register_objective_obj_val_transf("cvar", cvar_update_data)
+	## ROML_register_objective_obj_val_transf("MAD", MAD_update_data)
+	## ROML_register_objective_obj_val_transf("downside_MAD", downside_MAD_obj_val_transf)
+	## ROML_register_objective_obj_val_transf("downside_sd", downside_sd_obj_val_transf)
+	## ROML_register_objective_obj_val_transf("minimax_young", minimax_young_obj_val_transf)
+	## ROML_register_objective_obj_val_transf("quadratic_utility", quadratic_utility_obj_val_transf)
+	## ROML_register_objective_obj_val_transf("sharpe", sharpe_obj_val_transf)
+	## ROML_register_objective_obj_val_transf("omega", omega_obj_val_transf)
+}
