@@ -1,0 +1,23 @@
+Package: ROML
+Type: Package
+Title: R Optimization Modeling Language
+Version: 0.0-0
+Authors@R: c(person("Florian", "Schwendinger", 
+                    role = c("aut", "cre"),
+                    email = "FlorianSchwendinger@gmx.at"),
+             person("Laura", "Vana", role = "aut"),
+             person("Ronald", "Hochreiter", role = "aut"))
+Description: Utilizing the possibilities of R's lazy evaluation ROML provides 
+    an algebraic optimization modeling language. ROML is still under very active
+    developments, so it's possible that there will be heavy changes and some 
+    parts are not so well tested as they should be.
+Depends:
+    R (>= 2.15)
+Imports:
+	base,
+	stats,
+    slam,
+    R6,
+    ROI
+License: GPL-3
+RoxygenNote: 5.0.1
