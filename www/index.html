@@ -121,10 +121,21 @@ $(document).ready(function () {
 <h2>Installation</h2>
 <p>There are currently some building issues on <code>R-Forge</code> therefore the newest versions are not available via <code>&quot;http://R-Forge.R-project.org&quot;</code> but <code>&quot;http://roml.R-Forge.R-project.org&quot;</code>.<br />
 <code>ROML</code> and <code>ROML.portfolio</code> depend on <code>ROI (&gt;= 0.2-0)</code> which is currently only available on <code>R-Forge</code>. The code below shows how to install <code>ROML</code> and <code>ROML.portfolio</code>, please note this is still work in progress.</p>
-<pre class="r"><code>install.packages(&quot;ROI&quot;, repos=&quot;http://roml.R-Forge.R-project.org&quot;)
-install.packages(&quot;R6&quot;)
+<div id="install-roi" class="section level3">
+<h3>Install ROI</h3>
+<pre class="r"><code>install.packages(&quot;ROI&quot;, repos=&quot;http://roml.R-Forge.R-project.org&quot;)</code></pre>
+<p>If previously no ROI version was installed, one should at least install the two plugins <code>ROI.plugin.glpk</code> and <code>ROI.plugin.quadprog</code> to run the examples below.</p>
+<pre class="r"><code>## NOTE: (Rglpk needs libglpk-dev on Debian/Ubuntu (&quot;sudo apt-get install libglpk-dev&quot;))
+install.packages(&quot;Rglpk&quot;)
+install.packages(&quot;ROI.plugin.glpk&quot;)
+install.packages(&quot;ROI.plugin.quadprog&quot;)</code></pre>
+</div>
+<div id="install-roml" class="section level3">
+<h3>Install ROML</h3>
+<pre class="r"><code>install.packages(&quot;R6&quot;)
 install.packages(&quot;ROML&quot;, repos=&quot;http://roml.R-Forge.R-project.org&quot;)
 install.packages(&quot;ROML.portfolio&quot;, repos=&quot;http://roml.R-Forge.R-project.org&quot;)</code></pre>
+</div>
 </div>
 <div id="getting-started" class="section level2">
 <h2>Getting Started</h2>
