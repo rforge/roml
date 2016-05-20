@@ -1,0 +1,7 @@
+Package: ROML
+Version: 0.0-0
+Depends: R (>= 2.15)
+Imports: base, stats, slam, R6, ROI
+License: GPL-3
+NeedsCompilation: no
+
