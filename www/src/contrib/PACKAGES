@@ -1,3 +1,10 @@
+Package: ROI
+Version: 0.2-1
+Imports: methods, registry, slam
+Suggests: ROI.plugin.glpk, ROI.plugin.symphony, ROI.plugin.quadprog, numDeriv
+License: GPL-3
+NeedsCompilation: no
+
 Package: ROML
 Version: 0.0-0
 Depends: R (>= 2.15)
@@ -5,3 +12,9 @@ Imports: base, stats, slam, R6, ROI
 License: GPL-3
 NeedsCompilation: no
 
+Package: ROML.portfolio
+Version: 0.0-0
+Depends: R (>= 2.15)
+Imports: stats,	slam, ROI (>= 0.2-0), ROML
+License: GPL-3
+NeedsCompilation: no
