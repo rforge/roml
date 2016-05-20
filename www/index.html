@@ -487,7 +487,7 @@ round(opt$solution[grep(&quot;portfolio&quot;, names(opt$solution))], 3)</code><
 <p><strong>Turnover constraint:</strong> For a target turnover <span class="math inline">\(L\)</span> and some initial weights <span class="math inline">\(x_0\)</span>, the turnover contraint is <span class="math inline">\(\sum_{i=1}^N |x_i - x_{i0}| \leq L\)</span>. This can be reformulated in terms of auxiliary variables <span class="math inline">\(y^+, y^- \in \mathbb{R}^{+N}\)</span> such that <span class="math inline">\(y^+_i- y_i^- = x_i - x_{0i}\)</span> and <span class="math inline">\(\sum_{i=1}^N (y_i^+ + y_i^-) \leq L\)</span>. If no initial weights are specified, the default is equal weights.</p>
 <p><strong>Cardinality constraint:</strong> assigns bounds <span class="math inline">\(P_{min}\)</span> and <span class="math inline">\(P_{max}\)</span> on the number of assets in a portfolio. Binary auxiliary variables <span class="math inline">\(z\in \mathbb{R}^N\)</span> are introduced such that <span class="math inline">\(P_{min} \leq \sum_{i=1}^N z_i\leq P_{max}\)</span> and <span class="math inline">\(x_i - z_i \leq 0\)</span>.</p>
 <p><strong>Target return constraint:</strong> <span class="math inline">\(\hat\mu^\top x \geq \tau\)</span>.</p>
-<p><strong>Risk constraints – Variance:</strong> Typically constraints of the form <span class="math inline">\(x^\top Q x \leq q^2\)</span>. Note however that this is a quadratic constraint and needs appropriate solvers (e.g., in ROI Mosek, cplex).</p>
+<p><strong>Risk constraints – Variance:</strong> Typically constraints of the form <span class="math inline">\(x^\top Q x \leq q^2\)</span>. Note however that this is a quadratic constraint and needs appropriate solvers (e.g., in ROI.plugin.cplex).</p>
 <p><strong>Risk constraints – CVaR:</strong> Typically CVaR <span class="math inline">\((x, \alpha) \leq q\)</span>.</p>
 </div>
 <div id="more-complex-examples" class="section level2">
@@ -497,7 +497,6 @@ m$variable(portfolio, lb = 0)
 m$maximize(omega(portfolio))
 m$subject_to(cardinality(portfolio) &lt;= 7)
 m$subject_to(cvar(portfolio, 0.95) &lt;= 0.02)
-m$subject_to(markowitz(portfolio) &lt;= 0.09) 
 opt &lt;- optimize(m, solver=&quot;cplex&quot;, 
                      data=list(returns = djia2013))  
  round(opt$solution[grep(&quot;portfolio&quot;, names(opt$solution))]/
