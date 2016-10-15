@@ -1,0 +1,433 @@
+---
+title: "ROML-Portfolio Optimization Modeling"
+author: "Laura Vana,  Florian Schwendinger, Ronald Hochreiter"
+date: "October 15, 2016"
+output: html_document
+---
+
+The purpose of this vignette is to demonstrate a sample of the optimization problems that can be solved by using the ROML.portfolio package. Based on ROML (R Optimization Modeling Language), the ROML.portfolio package offers build-in functions for solving complex portfolio optimization models.
+
+## Installation
+There are currently some building issues on `R-Forge` therefore the newest versions are not 
+available via `"http://R-Forge.R-project.org"` but `"http://roml.R-Forge.R-project.org"`.   
+`ROML` and `ROML.portfolio` depend on `ROI (>= 0.2-0)` which is currently only available on
+`R-Forge`. The code below shows how to install `ROML` and `ROML.portfolio`, please note this 
+is still work in progress.
+
+### Install ROI
+```{r, eval=FALSE}
+## NOTE: Since slam Version 0.1-38 it depends on R Version >= 3.3.1
+if ( as.numeric(R.Version()$minor) >= 3.1 ) {
+  install.packages("slam")  
+} else {
+  url <- "https://cran.r-project.org/src/contrib/Archive/slam/slam_0.1-37.tar.gz"
+  download.file(url, (dest <- file.path(tempdir(), "slam.tar.gz")))
+  install.packages(dest, repos=NULL, type = "source")
+}
+install.packages("registry")
+install.packages("ROI")
+```
+If previously no ROI version was installed, one should at least install the two plugins `ROI.plugin.glpk` and `ROI.plugin.quadprog` to run the examples below.
+```{r, eval=FALSE}
+## NOTE: (Rglpk needs libglpk-dev on Debian/Ubuntu ("sudo apt-get install libglpk-dev"))
+install.packages("Rglpk")
+install.packages("ROI.plugin.glpk")
+install.packages("ROI.plugin.quadprog")
+```
+
+### Install ROML
+```{r, eval=FALSE}
+install.packages("R6")
+install.packages("ROML", repos="http://R-Forge.R-project.org")
+install.packages("ROML.portfolio", repos="http://roml.R-Forge.R-project.org")
+```
+
+## Getting Started
+Loading the packages:
+```{r, results = 'hide', warning=FALSE, message=FALSE}
+library("ROI")
+library("ROML")
+library("ROML.portfolio")
+```
+The djia2013 dataset contains daily returns for the 30 Dow Jones Industrial Average companies for the year 2013.
+```{r, results = 'hide'}
+data("djia2013")
+```
+
+We consider a portfolio of assets with random returns. We denote the portfolio
+choice vector by $x$ and by $r$ the vector random returns. 
+$N$ denotes the number of assets in the portfolio while $S$ is the number of scenarios in the scenarios set.
+
+## Objective functions 
+We consider a portfolio of assets with random returns. We denote the portfolio
+choice vector by $x$ and by $r$ the vector random returns. 
+$N$ denotes the number of assets in the portfolio while $S$ is the number of scenarios in the scenarios set.
+
+### Maximize expected return
+$$ \max_{x \in \mathbb{R}^N} \hat \mu^\top x $$
+where $\hat \mu$ is the vector of estimated mean asset returns.
+
+#### Example: 
+The following optimization problem:
+$$
+\begin{eqnarray*}
+\max_{x \in \mathbb{R}^N}&& \hat \mu^\top x\\
+\sum_{x=1}^N x_i &=& 1\\
+x_i &\geq& 0\\
+x_1 + x_3 + x_{17} &=& 0.5 
+\end{eqnarray*} 
+$$
+can be set up easily with ROML.portfolio:
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$maximize( reward(portfolio) )
+m$subject_to( budget_norm(portfolio))
+m$subject_to( portfolio[1] + portfolio[3] + portfolio[17] == 0.5)
+```
+(Note that the argument \texttt{lb = 0} can be omitted as this is the default). 
+To perfom the optimization, the optimize function is called:
+```{r}
+opt <- optimize(m, solver="glpk", 
+                        data=list(returns = djia2013)) 
+```
+As this optimization problem does not necessarily need a scenario set, the mean vector of the asset returns can also be directly given to the optimize function:
+```{r}
+opt <- optimize(m, solver="glpk", 
+                data=list(mu = colMeans(djia2013))) 
+```
+```{r}
+opt$solution
+```
+```{r}
+opt$objval
+```
+### Minimize Risk
+#### Minimize variance
+\[\min_{x \in \mathbb{R}^N} x^\top \Sigma x\]
+\[\Sigma = \mathbb{C}ov(r)\]
+\paragraph{Example:}
+The minimum variance portfolio is obtained by:
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$minimize( markowitz(portfolio) )
+m$subject_to( budget_norm(portfolio) )
+opt <- optimize(m, solver="quadprog", 
+                        data=list(returns = djia2013)) 
+```
+As this optimization problem does not necessarily need a scenario set, the variance-covariance matrix of the asset returns 
+can also be directly given to the optimize function:
+```{r}
+opt <- optimize(m, solver="quadprog", 
+                data=list(Sigma = cov(djia2013))) 
+```
+```{r}
+round(opt$solution, 3)
+```
+```{r}
+opt$objval
+```
+#### Minimize mean absolute deviation
+The minimization of the mean absolute deviation can be written as a linear problem. 
+$$
+\begin{eqnarray*}
+\min_{x\in \mathbb{R}^N, y\in \mathbb{R}^S, z\in \mathbb{R}^S}&& \frac{1}{S} \sum_{s = 1}^S (y_s + z_s)\\
+s.t.&&y_s - z_s = (r_{s} - \hat \mu)^\top x,\\
+&& y_s \geq 0, z_s \geq 0.
+\end{eqnarray*}
+$$
+**Example:** The minimum MAD portfolio is given by:
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$minimize( mad(portfolio) )
+m$subject_to( budget_norm(portfolio) )
+opt <- optimize(m, solver="glpk", 
+                        data=list(returns = djia2013)) 
+```
+```{r}
+round(opt$solution[1:ncol(djia2013)], 3)
+```
+```{r}
+opt$objval
+```
+#### Minimize lower semi-variance
+A downside risk measure is the lower semi-variance, which is the expected squared deviation from the mean, 
+calculated over those points that are no greater than the mean. 
+Only returns that are below the mean %(or below the target rate of return) 
+contribute to the portfolio risk. Let $r_s$ denote the vector of random returns of the $N$ assets in scenario $s$. 
+The problem can be formulated as:
+$$\min_{x\in \mathbb{R}^N} \frac{1}{S} \sum_{s = 1}^S \mathrm{max}(\hat\mu^\top x - r_s^\top x, 0)^2.$$
+The problem can be reformulated as a QP:
+$$
+\begin{eqnarray*}
+\min_{x\in \mathbb{R}^N, z\in \mathbb{R}^S}& \frac{1}{S} \sum_{s = 1}^S z_s^2\\
+s.t.&z_s \geq (\hat\mu - r_s)^\top x)\\
+&z_s \geq 0.
+\end{eqnarray*}
+$$
+\paragraph{Example:} The portfolio with minimum lower semi-variance is given by:
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$minimize( downside_var(portfolio) )
+m$subject_to( budget_norm(portfolio) )
+opt <- optimize(m, solver="quadprog", 
+                data=list(returns = djia2013)) 
+```
+```{r}
+round(opt$solution[1:ncol(djia2013)], 3)
+```
+```{r}
+opt$objval
+```
+#### Minimize lower semi-absolute deviation
+Let $r_s$ denote the vector of random returns of the $N$ assets in scenario $s$. The downside risk measure given by the expected absolute deviation from the mean,  calculated over those points that are no greater than the mean is given by:
+$$\frac{1}{S} \sum_{s = 1}^S |\mathrm{max}(\hat\mu^\top x - r_s^\top x, 0)|$$
+The minimization of this risk measure can be reformulated as a linear problem:
+$$
+\begin{eqnarray*}
+\min_{x\in \mathbb{R}^N, z\in \mathbb{R}^S}& \frac{1}{S} \sum_{s = 1}^S z_s,\\
+s.t.&z_s \geq (\hat\mu - r_s)^\top x\\
+&z_s \geq 0.
+\end{eqnarray*}
+$$
+**Example:** The portfolio with minimum lower semi-absolute deviation is given by:
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$minimize( downside_mad(portfolio) )
+m$subject_to( budget_norm(portfolio) )
+opt <- optimize(m, solver="glpk", 
+                data=list(returns = djia2013)) 
+```
+```{r}
+round(opt$solution[1:ncol(djia2013)], 3)
+```
+```{r}
+opt$objval
+```
+#### Minimize conditional value at risk
+The conditional value at risk/expected shortfall is the average of the losses 
+that exceed the $\alpha$-quantile of the loss distribution, also called $\alpha$ Value-at-Risk (VaR).
+Defining the loss distribution as minus of the return of the portfolio, the problem can be formulated as follows:
+$$
+\begin{eqnarray*}
+\min_{x\in \mathbb{R}^N, z\in \mathbb{R}^S, \gamma\in \mathbb{R}}& \gamma + \frac{1}{(1-\alpha)} \sum_{s = 1}^S p_s z_s\\
+s.t.\ &z_s \geq - r_s^\top x - \gamma,\\
+&z_s \geq 0,
+\end{eqnarray*}
+$$
+where VaR is a minimizer of the function over $\gamma$ and $p=(p_1, \dots, p_S)$ is a vector of probabilities associated with the scenarios.
+
+**Example:** Obtaining the portfolio with minimum 95\% conditional value at risk:
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$minimize( cvar(portfolio, 0.95) )
+m$subject_to( budget_norm(portfolio) )
+opt <- optimize(m, solver="glpk", 
+                data=list(returns = djia2013)) 
+```
+Alternatively, the value of $\alpha$ parameter can be assigned in the optimize function, i.e.,
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$minimize( cvar(portfolio, alpha) )
+m$subject_to( budget_norm(portfolio) )
+opt95 <- optimize(m, solver="glpk", 
+                data=list(returns = djia2013, alpha = 0.95)) 
+```
+```{r}
+round(opt95$solution[grep("portfolio", names(opt95$solution))], 3)
+```
+```{r}
+opt95$objval
+```
+Specifying $\alpha$ in the data list is advantageous when solutions for different $\alpha$'s ought to be compared. For example, if the solution for 95\% CVaR is to be compared with the solution for 99\% CVaR, only the optimize function has to be recalled, the model \texttt{m} remains unchanged:
+```{r}
+opt99 <- optimize(m, solver="glpk", 
+                data=list(returns = djia2013, alpha = 0.99)) 
+```
+```{r}
+round(opt99$solution[grep("portfolio", names(opt99$solution))], 3)
+```
+```{r}
+opt99$objval
+```
+The 95\% or the 99\% VaR are a by-product of the optimization problem and can be extracted from the solution
+```{r}
+VaR <- c(opt95$solution[grep("gamma", names(opt95$solution))], 
+         opt99$solution[grep("gamma", names(opt99$solution))]) 
+
+names(VaR) <-  c("0.95", "0.99")
+VaR
+```
+#### Minimax Portfolio
+The optimal portfolio is defined as that one that minimizes the maximum loss over all past historical periods, subject to a restriction on the minimum acceptable average return across all observed periods of time. 
+The minimax portfolio maximizes the minimum gain %\citep{10.23072634472} 
+and can be seen as a limiting case of CVaR for $\alpha \rightarrow 1$.
+Let $M_p=\min_s r_s^\top x$ denote the minimum gain of the portfolio.
+$$
+\begin{eqnarray*}
+\max_{x \in \mathbb{R}^N, M_p\in \mathbb{R}}&  M_p\\
+s.t.& r_s^\top x - M_p \geq 0.
+\end{eqnarray*}
+$$
+**Example:** The minimax portfolio, subject to target return constraints is given by:
+```{r}
+m <- model()
+m$variable(portfolio, lb = -10) # the portfolio choice vector; 
+m$minimize( minimax_young(portfolio) )
+m$subject_to( budget_norm(portfolio) )
+
+opt <- optimize(m, solver="glpk", 
+                data=list(returns = djia2013)) 
+opt
+```
+
+
+
+### Maximize Sharpe ratio
+Let $r_f$ denote the risk free rate (when not specified is set by default to zero).
+The Sharpe ratio of a random return of an asset is defined as:
+$$ \frac{\mathbb{E}(\tilde r)- r_f}{\sqrt{\mathbb{V}ar(\tilde r)}} $$
+The budget normalization constraint is applied and the problem can be formulated as a QP:
+$$
+\begin{eqnarray*}
+\max_{y\in \mathbb{R}^N, \kappa\in \mathbb{R}}& -  y^\top Q y\\
+s.t.&(\hat\mu - r_f \mathit{1})^\top y = \text{1},\\
+& \mathit{1}^\top y = \kappa,\\
+& \kappa > 0.
+\end{eqnarray*}
+$$
+The optimal solution is given by $x^* = y^* / \kappa^*$. 
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$maximize( sharpe(portfolio) )
+opt <- optimize(m, solver="quadprog", 
+                data=list(returns = djia2013)) 
+round(opt$solution[grep("portfolio", names(opt$solution))]/
+    opt$solution[grep("kappa", names(opt$solution))], 3)
+```
+If not explicitly specified, the default for the risk free rate is 0.
+\subsection{Maximize Omega}
+The Omega Ratio is a risk-return performance measure of an investment asset, portfolio, or strategy. 
+The Omega Ratio, introduced in 2002 by Keating and Shadwick, is defined as the probability weighted ratio of gains versus losses for some threshold return target $\tau$.
+$$\Omega(\tilde r) = \frac{\int_\tau^{+\infty}\left(1 - F(r)\right)\mathrm{d}r}{\int_{-\infty}^\tau F(r)\mathrm{d}r} $$
+where $F(r)$ denotes the cumulative distribution function of $\tilde r$.
+The maximization of $\Omega(\tilde r)$ can be formulated as an linear problem (note that the  budget normalization constraint and the target return constraint are already part of the model formulation).
+\begin{eqnarray*}
+\max_{y\in \mathbb{R}^N, u\in \mathbb{R}^S, z\in \mathbb{R}}&  \bar r^\top y - \tau z\\
+s.t.\ & u_s \geq \tau - r_s^\top y , \\
+             & u_i\geq 0,\\ 
+             & \mathit{1}^\top u = 1,\\ 
+             & \mathit{1}^\top y = z,\\ 
+             & \bar r^\top y \geq \tau z,\\
+             & z \geq 0  .
+\end{eqnarray*}
+The Omega optimal portfolio is given by  $x^* = y^* /z^*$, where $z$ is the homogenizing variable. If not explicitly specified, the default for the threshold is $\tau = 0$.
+```{r}
+m <- model()
+m$variable(portfolio, lb = 0) # the portfolio choice vector; 
+m$maximize( omega(portfolio) )
+opt <- optimize(m, solver="glpk", 
+                data=list(returns = djia2013)) 
+round(opt$solution[grep("portfolio", names(opt$solution))]/
+    opt$solution[grep("z", names(opt$solution))], 3)
+```
+### Maximize quadratic utility
+Let $\lambda$ denote the risk aversion parameter.
+Typical risk aversion parameters lie between 2 and 4.  
+\begin{eqnarray*}
+\max_{x\in\mathbb{R}^N}&  \hat \mu^\top x - \frac{\lambda}{2} x^\top Q x
+\end{eqnarray*}
+**Example:** Maximize quadratic utility where short selling is allowed but the weights should not be less than -1.
+```{r}
+m <- model()
+m$variable(portfolio, lb = -1) # the portfolio choice vector; 
+m$maximize( quadratic_utility(portfolio, lambda) )
+m$subject_to( budget_norm(portfolio) )
+opt <- optimize(m, solver="quadprog", 
+                data=list(returns = djia2013, lambda = 4)) 
+round(opt$solution[grep("portfolio", names(opt$solution))], 3)
+```
+
+## Constraints
+**Box constraints:** we follow ROI and set as default $0 \leq x_i \leq \infty$. Different bounds will  be specified in the portfolio variable definition, e.g., `m$variable(x, lb = -10, ub = 10)`.
+
+**Group constraints:** can be defined using subsetting (see examples).
+
+**Budget constraint:** $\sum_{i=1}^N x_i = B$, $\sum_{i=1}^N x_i \leq B_u$, $\sum_{i=1}^N x_i \geq B_l$.
+
+**Budget normalization constraint:** $\sum_{i=1}^N x_i = 1$.
+
+**Turnover constraint:** For a target turnover $L$ and some initial weights $x_0$, the turnover contraint is $\sum_{i=1}^N |x_i - x_{i0}| \leq L$. This can be reformulated in terms of auxiliary variables
+$y^+, y^- \in \mathbb{R}^{+N}$ such that $y^+_i- y_i^- = x_i - x_{0i}$ and $\sum_{i=1}^N (y_i^+ + y_i^-) \leq L$. If no initial weights are specified, the default is equal weights. 
+
+**Cardinality constraint:** assigns bounds $P_{min}$ and $P_{max}$ on the number of assets in a portfolio. Binary auxiliary variables $z\in \mathbb{R}^N$ are introduced such that $P_{min} \leq \sum_{i=1}^N z_i\leq P_{max}$ and $x_i - z_i \leq 0$. 
+
+**Target return constraint:**  $\hat\mu^\top x \geq \tau$.
+
+**Risk constraints -- Variance:** Typically constraints of the form $x^\top Q x \leq q^2$. Note however that this is a quadratic constraint and needs appropriate solvers (e.g., in ROI.plugin.cplex).
+
+**Risk constraints -- CVaR:** Typically CVaR $(x, \alpha) \leq q$. 
+
+## More complex examples
+```{r, eval=FALSE}
+m <- model()
+m$variable(portfolio, lb = 0)
+m$maximize(omega(portfolio))
+m$subject_to(cardinality(portfolio) <= 7)
+m$subject_to(cvar(portfolio, 0.95) <= 0.02)
+opt <- optimize(m, solver="cplex", 
+                     data=list(returns = djia2013))  
+ round(opt$solution[grep("portfolio", names(opt$solution))]/
+   opt$solution[grep("z", names(opt$solution))], 3)
+```
+\begin{eqnarray*}
+\max_{x\in\mathbb{R}^N}&  \hat\mu^\top x \\
+s.t.& \mathrm{CVaR}(x, 0.95) \leq 0.02 \\
+             & \mathrm{CVaR}(x, 0.99) \leq 0.03\\
+             & x_i \geq  -1\\
+             & x_2 + x_{10} + x_{20}\leq 0.5 \\
+             & \sum_{i=1}^N |x_i - x_{0i}| \leq 0.5
+\end{eqnarray*}
+```{r}
+m <- model()
+m$variable(x, lb = -1)
+m$maximize(reward(x)) 
+m$subject_to(cvar(x, 0.95) <= 0.02)
+m$subject_to(cvar(x, 0.99) <= 0.03)
+m$subject_to(x[2] + x[10] + x[20] <= 0.5)
+m$subject_to(turnover(x) <= 0.5)
+
+opt <- optimize(m, solver="glpk", data=list(returns = djia2013))  
+round(opt$solution[grep("x", names(opt$solution))], 3)
+```
+
+   
+Name            | Arguments                             |   Objectives                       | Type
+--------------- | ------------------------------------- | ---------------------------------- | ----
+`reward       ` | `(portfolioVar)                     ` | Portfolio return/reward            | LP
+`markowitz    ` | `(portfolioVar)                     ` | Variance of portfolio              | QP
+`mad          ` | `(portfolioVar)                     ` | Mean Absolute Deviation            | LP
+`downside_var ` | `(portfolioVar)                     ` | Lower semi-variance of portfolio   | QP
+`downside_mad ` | `(portfolioVar)                     ` | lower semi-mean absolute deviation | LP
+`cvar         ` | `(portfolioVar, alpha, probs = NULL)` | cvar                               | LP
+`minimax_young` | `(portfolioVar)                     ` | Minimax portfolio                  | LP 
+`sharpe       ` | `(portfolioVar, rf = 0)             ` | Sharpe ratio                       | QP 
+`omega        ` | `(portfolioVar, tau = 0)            ` | Omega                              | LP 
+
+Name            | Arguments                              |   Objectives                                                         | Type
+--------------- | -------------------------------------- | -------------------------------------------------------------------- | ----
+`reward     `   | `(portfolioVar)                      ` | Target return                                                        | LP
+`budget_norm`   | `(portfolioVar)                      ` | budget normalization constraint,i.e., sum of the portfolio equals 1  | LP 
+`budget     `   | `(portfolioVar)                      ` | budget constraint,i.e., sum of the portfolio equals budget           | LP 
+`turnover   `   | `(portfolioVar, x0 = NULL)           ` | Turnover                                                             | LP 
+`cardinality`   | `(portfolioVar)                      ` | Cardinality                                                          | MILP
+`markowitz  `   | `(portfolioVar)                      ` | Variance of portfolio                                                | QP
+`cvar       `   | `(portfolioVar, alpha,  probs = NULL)` | Conditional value at risk                                            | LP
+

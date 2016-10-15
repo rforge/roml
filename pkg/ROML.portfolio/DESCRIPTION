@@ -1,7 +1,7 @@
 Package: ROML.portfolio
 Type: Package
 Title: ROML-Portfolio-Optimization
-Version: 0.0-1
+Version: 0.0-2
 Authors@R: c(person("Laura", "Vana", 
                     role = c("aut", "cre"),
                     email = "laura.vana@wu.ac.at"),
