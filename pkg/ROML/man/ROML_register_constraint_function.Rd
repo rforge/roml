@@ -11,4 +11,7 @@ ROML_register_constraint_function(name, method)
 
 \item{method}{a method to be registered}
 }
+\description{
+TODO
+}
 

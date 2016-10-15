@@ -11,4 +11,7 @@ ROML_register_objective_data_update_function(name, method)
 
 \item{method}{a method to be registered}
 }
+\description{
+TODO
+}
 

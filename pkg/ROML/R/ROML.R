@@ -66,6 +66,7 @@ ROML_get_objective_function <- function(x=NULL) {
 #  ROML_register_constraint_function
 #  =================================
 #' @title Register Special Function
+#' @description TODO
 #' @param name a character string giving the name of the function
 #' @param method a method to be registered
 #' @export
@@ -94,6 +95,7 @@ ROML_get_constraint_function <- function(x=NULL) {
 #  ROML_register_objective_data_update_function
 #  ============================================
 #' @title Register a Generator Function
+#' @description TODO
 #' @param name a character string giving the name of the function
 #' @param method a method to be registered
 #' @export
