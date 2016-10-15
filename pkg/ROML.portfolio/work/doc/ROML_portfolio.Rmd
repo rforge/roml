@@ -8,11 +8,10 @@ output: html_document
 The purpose of this vignette is to demonstrate a sample of the optimization problems that can be solved by using the ROML.portfolio package. Based on ROML (R Optimization Modeling Language), the ROML.portfolio package offers build-in functions for solving complex portfolio optimization models.
 
 ## Installation
-There are currently some building issues on `R-Forge` therefore the newest versions are not 
-available via `"http://R-Forge.R-project.org"` but `"http://roml.R-Forge.R-project.org"`.   
-`ROML` and `ROML.portfolio` depend on `ROI (>= 0.2-0)` which is currently only available on
-`R-Forge`. The code below shows how to install `ROML` and `ROML.portfolio`, please note this 
-is still work in progress.
+The newest version of `ROML` is available at `"http://R-Forge.R-project.org"`.
+Due to changes in `R-3.3.1` the package `slam` depends now on `R >= 3.3.1`.
+Therfore, if you use an R version older than `R-3.3.1` you will have to install 
+the package `slam` from the archive (as also shown below).
 
 ### Install ROI
 ```{r, eval=FALSE}
@@ -21,8 +20,12 @@ if ( as.numeric(R.Version()$minor) >= 3.1 ) {
   install.packages("slam")  
 } else {
   url <- "https://cran.r-project.org/src/contrib/Archive/slam/slam_0.1-37.tar.gz"
-  download.file(url, (dest <- file.path(tempdir(), "slam.tar.gz")))
-  install.packages(dest, repos=NULL, type = "source")
+  if ( .Platform$OS.type == "unix" ) { ## unix
+    install.packages(url, repos=NULL, method="wget")
+  } else { ## windows
+    install.packages(url, repos=NULL, method="internal")
+  }
+  
 }
 install.packages("registry")
 install.packages("ROI")
@@ -39,7 +42,7 @@ install.packages("ROI.plugin.quadprog")
 ```{r, eval=FALSE}
 install.packages("R6")
 install.packages("ROML", repos="http://R-Forge.R-project.org")
-install.packages("ROML.portfolio", repos="http://roml.R-Forge.R-project.org")
+install.packages("ROML.portfolio", repos="http://R-Forge.R-project.org")
 ```
 
 ## Getting Started
@@ -376,13 +379,13 @@ $y^+, y^- \in \mathbb{R}^{+N}$ such that $y^+_i- y_i^- = x_i - x_{0i}$ and $\sum
 **Risk constraints -- CVaR:** Typically CVaR $(x, \alpha) \leq q$. 
 
 ## More complex examples
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 m <- model()
 m$variable(portfolio, lb = 0)
 m$maximize(omega(portfolio))
 m$subject_to(cardinality(portfolio) <= 7)
 m$subject_to(cvar(portfolio, 0.95) <= 0.02)
-opt <- optimize(m, solver="cplex", 
+opt <- optimize(m, solver="glpk", 
                      data=list(returns = djia2013))  
  round(opt$solution[grep("portfolio", names(opt$solution))]/
    opt$solution[grep("z", names(opt$solution))], 3)
