@@ -26,11 +26,13 @@
 add_expressions <- function(x, y) {
     x <- as.Expression(x)
     y <- as.Expression(y)
-    if ( is.A_Expression(x) & is.A_Expression(y) )
-        if ( !all(c(x$container, y$container) %in% "Vector")  ) 
+    if ( is.A_Expression(x) & is.A_Expression(y) ) {
+        if ( !all(c(x$container, y$container) %in% "Vector") ) {
             stop("TODO: NOT all Vector container")
+        }
         return( A_Expression(container="Vector", value=c(x$value, y$value), 
                              data=cbind(x$data, y$data)) )
+    }
     if ( is.numeric(x) ) 
         return( A_Expression(container=y$container, value=(x + y$value), data=y$data) )
     if ( is.numeric(y) ) 
@@ -41,11 +43,12 @@ add_expressions <- function(x, y) {
 substract_expressions <- function(x, y) {
     x <- as.Expression(x)
     y <- as.Expression(y)
-    if ( is.A_Expression(x) & is.A_Expression(y) )
+    if ( is.A_Expression(x) & is.A_Expression(y) ) {
         if ( !all(c(x$container, y$container) %in% "Vector")  ) 
             stop("TODO: NOT all Vector container")
         return( A_Expression(container="Vector", value=c(x$value, -y$value), 
                              data=cbind(x$data, y$data)) )
+    }
     if ( is.numeric(x) ) 
         return( A_Expression(container=y$container, value=( x - y$value), data=y$data) )
     if ( is.numeric(y) ) 
@@ -63,9 +66,21 @@ substract_expressions <- function(x, y) {
     stop(sprintf('"%s / %s" is not applicable!', shQuote(class(x)[1]), shQuote(class(y)[1])))
 }
 
+#' @export
+#' @noRd
+`%*%.Vector.Variable` <- function(x, y) {
+    stopifnot(is.numeric(x) | is.numeric(y))
+    if ( is.numeric(x) ) {
+        return( A_Expression(container="Vector", value=(x / y$value), data=y$data) )
+    }
+    return( A_Expression(container="Vector", value=(y / x$value), data=x$data) )
+}
 
-## #' @export
-## #' @noRd
+## Note:
+##   Due to registration issues + and - Vector.Variable is registered in zzz.R
+## 
+## # @export
+## # @noRd
 ## `+.Vector.Variable` <- function(x, y) {
 ##     if ( is.Vector.Variable(x) & is.Vector.Variable(y) )
 ##         return( A_Expression(container="Vector", value=c(x$value, y$value), 
@@ -77,8 +92,8 @@ substract_expressions <- function(x, y) {
 ##     stop("error")
 ## }
 
-## #' @export
-## #' @noRd
+## # @export
+## # @noRd
 ## `-.Vector.Variable` <- function(x, y) {
 ##     if ( is.Vector.Variable(x) & is.Vector.Variable(y) )
 ##         return( A_Expression(container="Vector", value=c(x$value, -y$value), 
@@ -87,7 +102,7 @@ substract_expressions <- function(x, y) {
 ##         return( A_Expression(container="Vector", value=( x - y$value), data=y$data) )
 ##     if ( is.numeric(y) ) 
 ##         return( A_Expression(container="Vector", value=(-y + x$value), data=x$data) )
-##    stop("error")
+##     stop("error")
 ## }
 
 `<=.Variable` <- function(lhs, rhs) as.Expression(lhs) <= as.Expression(rhs)
