@@ -150,12 +150,14 @@ get_update_data_expressions <- function(parse_data, update_names) {
 #' @param model an object of type \code{"Optimization.Model"}.
 #' @param solver a character string giving the name of the solver.
 #' @param data a list giving the data used in the the model.
+#' @param ... optional arguments.
 #' @export
 # -----------------------------------------------------------
-optimize <- function(model, solver="", data=list()) {
+optimize <- function(model, solver="", data=list(), ...) {
     ROML_MODEL <- model$clone()
     ROML_MODEL$data <- data
     obj <- model_get_objective_functions(ROML_MODEL)
+    args <- list(...)
 
     ## update variables
     if ( !is.null(unlist(obj$update_data, use.names=FALSE)) ) {
@@ -208,7 +210,8 @@ optimize <- function(model, solver="", data=list()) {
 
     roi_model <- ROI::OP(objective = objective, constraints = constraints,
                          types = types, bounds = bounds, maximum=ROML_MODEL$maximum)
-    ## if (only_model) return(roi_model)
+    if ( isTRUE(args$model_only) ) 
+        return(roi_model)
     solution <- ROI_solve(x=roi_model, solver=solver)
     attributes(solution$solution)$names <- var_names
     attributes(solution)$model <- roi_model
