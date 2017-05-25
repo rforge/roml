@@ -27,7 +27,8 @@ ROML_Variable <- R6Class(
             self$dim <- dim
             if ( is.numeric(length) ) {
                 self$length <- length
-                self$value <- setNames(rep.int(1L, length), sprintf("%s$%i", name, seq_len(length)))
+                self$value <- setNames(rep.int(1L, length), 
+                                       sprintf("%s$%i", name, seq_len(length)))
             }
             self$data <- data
         }

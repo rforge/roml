@@ -97,7 +97,7 @@ build_bounds <- function(model) {
         if ( inherits(model$bounds[[vname]], "ROML_Bound") ) {
             mb <- model$bounds[[vname]]
             if ( is.Promise( mb ) ) {
-                mb <- sanitize_bounds(vname, mb$lower, mb$upper, mb$conic, len)
+                mb <- sanitize_bounds(vname, mb$lower, mb$upper, len)
             }
             if ( !mb$lower$is_default_bound ) {
                 li <- cum_len + seq_along(mb$lower$bound)
@@ -105,13 +105,14 @@ build_bounds <- function(model) {
                 bo$lb <- c(bo$lb, mb$lower$bound)
             }
             if ( !mb$upper$is_default_bound ) {
-                ui <- cum_len + seq_along(mb[[i]]$upper$bound)
-                bo$li <- c(bo$ui, ui)
-                bo$lb <- c(bo$ub, mb$upper$bound)
+                ui <- cum_len + seq_along(mb$upper$bound)
+                bo$ui <- c(bo$ui, ui)
+                bo$ub <- c(bo$ub, mb$upper$bound)
             }
         }
         cum_len <- cum_len + len
     }
+
     return( V_bound(li=bo$li, ui=bo$ui, lb=bo$lb, ub=bo$ub, cum_len) )
 }
 
@@ -153,7 +154,12 @@ get_update_data_expressions <- function(parse_data, update_names) {
 #' @param ... optional arguments.
 #' @export
 # -----------------------------------------------------------
-optimize <- function(model, solver="", data=list(), ...) {
+optimize <- function(model, solver="auto", data=list(), ...) {
+    ## TODO: 
+    ## - rename ROML_MODEL to model (so I will create a new copy).
+    ## - restructure the code so that I can use each function
+    ##   independently on the model.
+    ## - add sum operator for vector variables!
     ROML_MODEL <- model$clone()
     ROML_MODEL$data <- data
     obj <- model_get_objective_functions(ROML_MODEL)
@@ -185,6 +191,8 @@ optimize <- function(model, solver="", data=list(), ...) {
         ##constraints <- c(list(zero_L_constraint(length(var_names), var_names)), constraints)
         constraints <- c(list(zero_L_constraint(length(var_names), var_names)), ROML_MODEL$constraints)
         constraints <- ROI::rbind.constraint(constraints, use.names=TRUE, recursive=TRUE)
+    } else {
+        constraints <- NULL
     }
     
     ## build types   
@@ -210,7 +218,7 @@ optimize <- function(model, solver="", data=list(), ...) {
 
     roi_model <- ROI::OP(objective = objective, constraints = constraints,
                          types = types, bounds = bounds, maximum=ROML_MODEL$maximum)
-    if ( isTRUE(args$model_only) ) 
+    if (isTRUE(list(...)$dry_run))
         return(roi_model)
     solution <- ROI_solve(x=roi_model, solver=solver)
     attributes(solution$solution)$names <- var_names

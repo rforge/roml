@@ -60,21 +60,19 @@ sanitize_upper_bounds <- function(ub, len) {
     return(xb)
 }
 
-sanitize_bounds <- function(variable_name, lb, ub, cb, len) {
+sanitize_bounds <- function(variable_name, lb, ub, len) {
     if ( is_zero(lb) & is_inf(ub) ) return(NULL)
     xb <- new.env(parent=emptyenv(), size=4L)
     if ( is.null(len) ) {
         xb$variable_name <- variable_name
         xb$lower <- lb
         xb$upper <- ub
-        xb$conic <- "TODO!"
         class(xb) <- c("Promise", "ROML_Bound")
         return( xb )
     }
     xb$variable_name <- variable_name
     xb$lower <- sanitize_lower_bounds(lb, len)
     xb$upper <- sanitize_upper_bounds(ub, len)
-    xb$conic <- "TODO!"
     class(xb) <- "ROML_Bound"
     return( xb )
 }
@@ -131,7 +129,7 @@ Optimization.Model <- R6Class(
 
             ## chreate bounds
             ## #TODO: Model PsdMatrices
-            self$add_bound( sanitize_bounds(vname, lb, ub, cone, length), 
+            self$add_bound( sanitize_bounds(vname, lb, ub, length), 
                             variable_name = vname )
             
             ## create variable based on length an dimension
