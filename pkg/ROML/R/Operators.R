@@ -38,6 +38,21 @@ add_expressions <- function(x, y) {
     stop("error")
 }
 
+substract_expressions <- function(x, y) {
+    x <- as.Expression(x)
+    y <- as.Expression(y)
+    if ( is.A_Expression(x) & is.A_Expression(y) )
+        if ( !all(c(x$container, y$container) %in% "Vector")  ) 
+            stop("TODO: NOT all Vector container")
+        return( A_Expression(container="Vector", value=c(x$value, -y$value), 
+                             data=cbind(x$data, y$data)) )
+    if ( is.numeric(x) ) 
+        return( A_Expression(container=y$container, value=( x - y$value), data=y$data) )
+    if ( is.numeric(y) ) 
+        return( A_Expression(container=x$container, value=(-y + x$value), data=x$data) )
+    stop("error")
+}
+
 #' @export
 #' @noRd
 `/.Vector.Variable` <- function(x, y) {
@@ -62,18 +77,18 @@ add_expressions <- function(x, y) {
 ##     stop("error")
 ## }
 
-#' @export
-#' @noRd
-`-.Vector.Variable` <- function(x, y) {
-    if ( is.Vector.Variable(x) & is.Vector.Variable(y) )
-        return( A_Expression(container="Vector", value=c(x$value, -y$value), 
-                             data=cbind(x$data, y$data)) )
-    if ( is.numeric(x) ) 
-        return( A_Expression(container="Vector", value=( x - y$value), data=y$data) )
-    if ( is.numeric(y) ) 
-        return( A_Expression(container="Vector", value=(-y + x$value), data=x$data) )
-    stop("error")
-}
+## #' @export
+## #' @noRd
+## `-.Vector.Variable` <- function(x, y) {
+##     if ( is.Vector.Variable(x) & is.Vector.Variable(y) )
+##         return( A_Expression(container="Vector", value=c(x$value, -y$value), 
+##                              data=cbind(x$data, y$data)) )
+##     if ( is.numeric(x) ) 
+##         return( A_Expression(container="Vector", value=( x - y$value), data=y$data) )
+##     if ( is.numeric(y) ) 
+##         return( A_Expression(container="Vector", value=(-y + x$value), data=x$data) )
+##    stop("error")
+## }
 
 `<=.Variable` <- function(lhs, rhs) as.Expression(lhs) <= as.Expression(rhs)
 `>=.Variable` <- function(lhs, rhs) as.Expression(lhs) >= as.Expression(rhs)

@@ -9,6 +9,7 @@ library(ROML)
 
 attach(getNamespace("ROML"))
 
+
 check <- function(domain, condition, level=1, message="", call=sys.call(-1L)) {
     if ( isTRUE(condition) ) return(invisible(NULL))
     msg <- sprintf("in %s", domain)
@@ -94,6 +95,8 @@ test.LP_1 <- function(solver) {
     check("test.LP_1", equal(solution$solution, sol))
 }
 
+
+
 solver <- "glpk"
 
 model <- m
@@ -128,5 +131,67 @@ str(m)
 str(ROML_MODEL)
 
 
+## ---------------------------
+## Examples (koberstein)
+## --------------------------- 
 
+test.PP_simple <- function(solver) {
+##' LP - Example
+##' Solver: Rglpk
+##'
+##' maximize:   
+##'   25 xb + 30 xc
+##' subject to:    
+##'   1/200 xb + 1/140 xc <= 40
+##'         xb            <= 6000
+##'                    xc <= 4000
+##'   xb, xc  are non-negative real numbers
+##'
+##' Solution:  6000 1400
+    m <- model()
+    m$variable(XB, length = 1L, ub = 6000)
+    m$variable(XC, length = 1L, ub = 4000)
+    m$maximize(25 * XB + 30 * XC)
+    m$subject_to(1/200 * XB + 1/140 * XC  <= 40)
+    solution <- optimize(m, solver = "auto")
+    sol <- c(6000, 1400)
+    check("test.PP_simple", equal(solution$solution, sol))
+}
 
+test.PP_simple("glpk")
+
+test.PP_general <- function(solver) {
+##' LP - Example
+##' Solver: Rglpk
+##'
+##' maximize:   
+##'   25 xb + 30 xc
+##' subject to:    
+##'   1/200 xb + 1/140 xc <= 40
+##'         xb            <= 6000
+##'                    xc <= 4000
+##'   xb, xc  are non-negative real numbers
+##'
+##' Solution:  6000 1400
+    P <- c("bands", "coils")
+    C <- c(25, 30)
+    a <- c(200, 140)
+    b <- 40
+    u <- c(6000, 4000)
+    m <- model()
+    m$variable(X, length = length(P), ub = u)
+    m$maximize(C %*% X)
+
+m$subject_to(1/a %*% X <= b )
+
+sol <- optimize(m)
+sol$solution
+m <- model()
+    m$variable(XB, length = 1L, ub = 6000)
+    m$variable(XC, length = 1L, ub = 4000)
+    m$maximize(25 * XB + 30 * XC)
+    m$subject_to(1/200 * XB + 1/140 * XC  <= 40)
+    solution <- optimize(m, solver = "auto")
+    sol <- c(6000, 1400)
+    check("test.PP_simple", equal(solution$solution, sol))
+}
