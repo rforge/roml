@@ -1,7 +1,7 @@
 Package: ROML
 Type: Package
 Title: R Optimization Modeling Language
-Version: 0.0-2
+Version: 0.0-3
 Authors@R: c(person("Florian", "Schwendinger", 
                     role = c("aut", "cre"),
                     email = "FlorianSchwendinger@gmx.at"),

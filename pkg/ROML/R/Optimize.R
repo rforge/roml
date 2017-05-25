@@ -190,7 +190,7 @@ optimize <- function(model, solver="auto", data=list(), ...) {
     if ( length(ROML_MODEL$constraints) ) {
         ##constraints <- c(list(zero_L_constraint(length(var_names), var_names)), constraints)
         constraints <- c(list(zero_L_constraint(length(var_names), var_names)), ROML_MODEL$constraints)
-        constraints <- ROI::rbind.constraint(constraints, use.names=TRUE, recursive=TRUE)
+        constraints <- do.call(rbind, c(constraints, list(use.names=TRUE, recursive=TRUE)))
     } else {
         constraints <- NULL
     }

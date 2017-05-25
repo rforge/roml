@@ -38,6 +38,7 @@ Parse.Tree.Data <- R6Class(
         tokens=NULL,
         text=NULL,
         has.function_call = function() {
+            ## SYMBOL_FUNCTION_CALL has the token number 296L
             return( any(c(296L) %in% self$data$token.num) )
         },
         initialize = function(src, tree, data, tokens, text) {

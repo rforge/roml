@@ -2,7 +2,9 @@
 q("no")
 Rdevel
 
+Sys.setenv(ROI_LOAD_PLUGINS = FALSE)
 library(ROI)
+library(ROI.plugin.glpk)
 library(ROML)
 
 attach(getNamespace("ROML"))
@@ -38,6 +40,8 @@ m$maximize(x)
 sol <- optimize(m, "glpk")
 max(sol$solution) == 1
 sol$solution
+
+traceback()
 
 ## ---------------------------
 ## Bounds
@@ -90,6 +94,13 @@ test.LP_1 <- function(solver) {
     check("test.LP_1", equal(solution$solution, sol))
 }
 
+solver <- "glpk"
+
+model <- m
+data <- list()
+
+
+test.LP_1("glpk")
 
 m <- model()
 m$variable(x, length=3L)
@@ -109,7 +120,12 @@ local({test.upper.bounds_1()})
 
 local({test.LP_1("glpk")})
 
+m$objective
+m$maximize
 
+str(m)
+
+str(ROML_MODEL)
 
 
 
